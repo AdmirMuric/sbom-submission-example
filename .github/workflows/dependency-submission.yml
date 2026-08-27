@@ -45,7 +45,7 @@ jobs:
         shell: bash
         run: |
           image="ghcr.io/${GITHUB_REPOSITORY,,}"
-          tag="run-${GITHUB_RUN_ID}"
+          tag="run-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           echo "name=$image" >> "$GITHUB_OUTPUT"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
@@ -69,8 +69,8 @@ jobs:
       - name: Create SBOM release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: sbom-${{ github.run_id }}
-          name: sbom-${{ github.run_id }}
+          tag_name: sbom-${{ github.run_id }}-${{ github.run_attempt }}
+          name: sbom-${{ github.run_id }}-${{ github.run_attempt }}
           prerelease: true
           files: |
             sbom.spdx.json
@@ -82,13 +82,13 @@ jobs:
           subject-name: ${{ steps.image.outputs.name }}
           subject-digest: ${{ steps.push_image.outputs.digest }}
           sbom-path: sbom.spdx.json
-          release-tag: sbom-${{ github.run_id }}
-          release-title: sbom-${{ github.run_id }}
+          release-tag: sbom-${{ github.run_id }}-${{ github.run_attempt }}
+          release-title: sbom-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Submit SBOM to Dependency Graph
         uses: ./.github/actions/sbom-dependency-submission
         with:
           subject: ${{ steps.image.outputs.name }}
           digest: ${{ steps.push_image.outputs.digest }}
-          correlator: container-image
+          correlator: src/SbomSubmissionExample/SbomSubmissionExample.csproj
           token: ${{ secrets.GITHUB_TOKEN }}

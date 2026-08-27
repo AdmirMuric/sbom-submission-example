@@ -62,7 +62,7 @@ runs:
 
     - name: Generate attestation binding artifact to SBOM digest
       if: ${{ inputs.subject-path != '' }}
-      uses: actions/attest@v2
+      uses: actions/attest@v4
       with:
         subject-path: ${{ inputs.subject-path }}
         predicate-path: sbom-link-predicate.json
@@ -70,7 +70,7 @@ runs:
 
     - name: Generate attestation binding artifact to SBOM digest
       if: ${{ inputs.subject-path == '' }}
-      uses: actions/attest@v2
+      uses: actions/attest@v4
       with:
         subject-name: ${{ inputs.subject-name }}
         subject-digest: ${{ inputs.subject-digest }}
