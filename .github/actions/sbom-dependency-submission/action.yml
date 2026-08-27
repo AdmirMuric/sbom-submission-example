@@ -1,0 +1,79 @@
+name: SBOM Dependency Submission
+description: Verifies an attestation, downloads the SBOM, and submits it to the Dependency Graph.
+
+inputs:
+  subject:
+    description: Attestation subject name.
+    required: true
+  digest:
+    description: Subject digest.
+    required: true
+  file-path:
+    description: Path to local artifact file. Required for file artifacts, not needed for containers.
+    required: false
+  correlator:
+    description: Unique correlator for the dependency snapshot.
+    required: true
+  token:
+    description: GitHub token with contents write permission.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Verify attestation and download SBOM
+      id: sbom
+      shell: pwsh
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        SUBJECT: ${{ inputs.subject }}
+        DIGEST: ${{ inputs.digest }}
+        FILE_PATH: ${{ inputs.file-path }}
+        OWNER: ${{ github.repository_owner }}
+        PREDICATE_TYPE: https://example.com/attestations/sbom-link/v1
+      run: |
+        $ErrorActionPreference = 'Stop'
+        $PSNativeCommandUseErrorActionPreference = $true
+
+        $verificationDir = New-Item -ItemType Directory -Path (Join-Path $env:RUNNER_TEMP 'sbom_verification')
+        Push-Location $verificationDir.FullName
+
+        if ($env:FILE_PATH) {
+          $artifact = $env:FILE_PATH
+        } else {
+          $artifact = "oci://$($env:SUBJECT)@$($env:DIGEST)"
+          $env:GH_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
+        }
+
+        gh attestation verify $artifact --owner $env:OWNER --predicate-type $env:PREDICATE_TYPE
+        gh attestation download $artifact --owner $env:OWNER --predicate-type $env:PREDICATE_TYPE
+
+        $bundleFile = Get-ChildItem -Filter '*.jsonl' | Select-Object -First 1
+        $attestation = Get-Content -LiteralPath $bundleFile.FullName | ConvertFrom-Json
+        $payload = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($attestation.dsseEnvelope.payload)) | ConvertFrom-Json
+        $predicate = $payload.predicate
+
+        $sbomName = $predicate.sbom.name
+        gh release download $predicate.release.tag --repo $predicate.release.repository --pattern $sbomName
+        Write-Host "SBOM downloaded: $sbomName"
+
+        $expectedHash = $predicate.sbom.digest.sha256
+        $actualHash = (Get-FileHash -Algorithm SHA256 $sbomName).Hash.ToLowerInvariant()
+        if ($actualHash -ne $expectedHash) {
+          throw "SBOM hash mismatch. Expected: $expectedHash, Actual: $actualHash"
+        }
+        Write-Host "SBOM verified (sha256: $actualHash)"
+
+        $sbom = Get-Content $sbomName | ConvertFrom-Json
+        Write-Host "SBOM contains $($sbom.packages.Count) packages"
+        "sbom_dir=$($verificationDir.FullName)" >> $env:GITHUB_OUTPUT
+
+        Pop-Location
+
+    - name: Submit SBOM to Dependency Graph
+      uses: advanced-security/spdx-dependency-submission-action@v0.3.2
+      with:
+        filePath: ${{ steps.sbom.outputs.sbom_dir }}
+        filePattern: "*.json"
+        correlator: ${{ inputs.correlator }}
+        token: ${{ inputs.token }}

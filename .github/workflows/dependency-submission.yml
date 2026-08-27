@@ -1,0 +1,94 @@
+name: Dependency Submission
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - Dockerfile
+      - src/**
+      - .github/actions/**
+      - .github/workflows/dependency-submission.yml
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+  packages: write
+
+jobs:
+  container-sbom:
+    name: Generate and submit container SBOM
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build app
+        run: dotnet build SbomSubmissionExample.sln --configuration Release
+
+      - name: Docker login
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Set image metadata
+        id: image
+        shell: bash
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY,,}"
+          tag="run-${GITHUB_RUN_ID}"
+          echo "name=$image" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push container image
+        id: push_image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ${{ steps.image.outputs.name }}:${{ steps.image.outputs.tag }}
+
+      - name: Generate SBOM from image
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ steps.image.outputs.name }}:${{ steps.image.outputs.tag }}
+          format: spdx-json
+          output-file: sbom.spdx.json
+          artifact-name: sbom-submission-example.spdx.json
+
+      - name: Create SBOM release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: sbom-${{ github.run_id }}
+          name: sbom-${{ github.run_id }}
+          prerelease: true
+          files: |
+            sbom.spdx.json
+            README.md
+
+      - name: Create SBOM attestation
+        uses: ./.github/actions/github-create-sbom-attestation
+        with:
+          subject-name: ${{ steps.image.outputs.name }}
+          subject-digest: ${{ steps.push_image.outputs.digest }}
+          sbom-path: sbom.spdx.json
+          release-tag: sbom-${{ github.run_id }}
+          release-title: sbom-${{ github.run_id }}
+
+      - name: Submit SBOM to Dependency Graph
+        uses: ./.github/actions/sbom-dependency-submission
+        with:
+          subject: ${{ steps.image.outputs.name }}
+          digest: ${{ steps.push_image.outputs.digest }}
+          correlator: container-image
+          token: ${{ secrets.GITHUB_TOKEN }}
