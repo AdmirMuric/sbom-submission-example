@@ -71,7 +71,7 @@ runs:
         Pop-Location
 
     - name: Submit SBOM to Dependency Graph
-      uses: advanced-security/spdx-dependency-submission-action@v0.3.2
+      uses: advanced-security/spdx-dependency-submission-action@v0.4.0
       with:
         filePath: ${{ steps.sbom.outputs.sbom_dir }}
         filePattern: "*.json"
