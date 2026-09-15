@@ -27,7 +27,7 @@ internal sealed class HelloWorldService : IHostedService
     {
         var message = new
         {
-            Text = "Hello from an SBOM dependency submission sample",
+            Text = "Hello from an SBOM dependency submission sample!",
             Started = DateTimeOffset.UtcNow.Humanize()
         };
 
