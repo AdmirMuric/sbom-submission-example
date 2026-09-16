@@ -58,32 +58,13 @@ jobs:
           push: true
           tags: ${{ steps.image.outputs.name }}:${{ steps.image.outputs.tag }}
 
-      - name: Generate SBOM from .NET dependencies
+      - name: Generate SBOM from image
         uses: anchore/sbom-action@v0
         with:
-          file: src/SbomSubmissionExample/bin/Release/net8.0/SbomSubmissionExample.deps.json
+          image: ${{ steps.image.outputs.name }}:${{ steps.image.outputs.tag }}
           format: spdx-json
           output-file: sbom.spdx.json
           artifact-name: sbom-submission-example.spdx.json
-
-      - name: Normalize SPDX dependency relationships
-        shell: bash
-        run: |
-          tmp_file=$(mktemp)
-          jq '
-            .relationships |= map(
-              if .relationshipType == "DEPENDENCY_OF" then
-                .spdxElementId as $dependency
-                | .relatedSpdxElement as $dependent
-                | .spdxElementId = $dependent
-                | .relatedSpdxElement = $dependency
-                | .relationshipType = "DEPENDS_ON"
-              else
-                .
-              end
-            )
-          ' sbom.spdx.json > "$tmp_file"
-          mv "$tmp_file" sbom.spdx.json
 
       - name: Create SBOM release
         uses: softprops/action-gh-release@v3
@@ -110,5 +91,4 @@ jobs:
           subject: ${{ steps.image.outputs.name }}
           digest: ${{ steps.push_image.outputs.digest }}
           correlator: src/SbomSubmissionExample/SbomSubmissionExample.csproj
-          sbom-path: sbom.spdx.json
           token: ${{ secrets.GITHUB_TOKEN }}

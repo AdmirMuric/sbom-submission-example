@@ -11,7 +11,7 @@ on:
       - .github/workflows/trivy-sbom.yml
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   trivy-sbom:
@@ -32,8 +32,9 @@ jobs:
           output: trivy-sbom.spdx.json
           scanners: vuln
 
-      - name: Upload Trivy SBOM
-        uses: actions/upload-artifact@v4
+      - name: Submit Trivy SBOM to Dependency Graph
+        uses: ./.github/actions/sbom-dependency-submission
         with:
-          name: trivy-sbom
-          path: trivy-sbom.spdx.json
+          correlator: trivy-sbom
+          sbom-path: trivy-sbom.spdx.json
+          token: ${{ secrets.GITHUB_TOKEN }}

@@ -11,9 +11,6 @@ inputs:
   file-path:
     description: Path to local artifact file. Required for file artifacts, not needed for containers.
     required: false
-  sbom-path:
-    description: Path to a local SBOM to submit instead of downloading the attested SBOM.
-    required: false
   correlator:
     description: Unique correlator for the dependency snapshot.
     required: true
@@ -32,7 +29,6 @@ runs:
         SUBJECT: ${{ inputs.subject }}
         DIGEST: ${{ inputs.digest }}
         FILE_PATH: ${{ inputs.file-path }}
-        SBOM_PATH: ${{ inputs.sbom-path }}
         OWNER: ${{ github.repository_owner }}
         PREDICATE_TYPE: https://example.com/attestations/sbom-link/v1
       run: |
@@ -40,12 +36,6 @@ runs:
         $PSNativeCommandUseErrorActionPreference = $true
 
         $verificationDir = New-Item -ItemType Directory -Path (Join-Path $env:RUNNER_TEMP 'sbom_verification')
-
-        if ($env:SBOM_PATH) {
-          Copy-Item -LiteralPath $env:SBOM_PATH -Destination $verificationDir.FullName
-          "sbom_dir=$($verificationDir.FullName)" >> $env:GITHUB_OUTPUT
-          return
-        }
 
         Push-Location $verificationDir.FullName
 
