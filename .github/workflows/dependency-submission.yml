@@ -66,10 +66,17 @@ jobs:
           output-file: sbom.spdx.json
           artifact-name: sbom-submission-example.spdx.json
 
-      - name: Print application dependency entry
+      - name: Extract application dependency entry
         shell: bash
         run: |
-          jq -r '.packages[] | select(.name == "app/SbomSubmissionExample.deps.json") | .name' sbom.spdx.json
+          jq -e '.packages[] | select(.name == "app/SbomSubmissionExample.deps.json")' sbom.spdx.json > app-dependency-entry.json
+
+      - name: Upload application dependency entry
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-submission-example-application-entry
+          path: app-dependency-entry.json
+          if-no-files-found: error
 
       - name: Create SBOM release
         uses: softprops/action-gh-release@v3
