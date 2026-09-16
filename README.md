@@ -20,4 +20,4 @@ The workflow in `.github/workflows/dependency-submission.yml` mirrors the patter
 
 Run it manually from **Actions > Dependency Submission > Run workflow**.
 
-The separate `.github/workflows/trivy-sbom.yml` workflow builds the container locally and generates `trivy-sbom.spdx.json` with Trivy. It uploads the file as a workflow artifact and does not publish or submit the SBOM. Run it manually from **Actions > Generate Trivy SBOM > Run workflow**.
+The separate `.github/workflows/trivy-sbom.yml` workflow builds the container locally and generates `trivy-sbom.spdx.json` with Trivy. It uploads the file as a workflow artifact and does not publish or submit the SBOM. Run it manually from **Actions > Generate Trivy SBOM > Run workflow**. 
