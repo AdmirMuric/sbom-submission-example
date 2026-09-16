@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "M0IJ+TazXwM=",
+  "dgSpecHash": "BaPQSlnd/MD6xV42lh0t0NsMCeZRE4IF8/rULF+pdGS6iIIckJQHzLKLI9xNMGTME8OzNXz2ALwhBFVte6FKIA==",
   "success": true,
-  "projectFilePath": "/src/src/SbomSubmissionExample/SbomSubmissionExample.csproj",
+  "projectFilePath": "/home/admirmuric/github/sbom-submission-example/src/SbomSubmissionExample/SbomSubmissionExample.csproj",
   "expectedPackageFiles": [
     "/root/.nuget/packages/humanizer/2.14.1/humanizer.2.14.1.nupkg.sha512",
     "/root/.nuget/packages/humanizer.core/2.14.1/humanizer.core.2.14.1.nupkg.sha512",

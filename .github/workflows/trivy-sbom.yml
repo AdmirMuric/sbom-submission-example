@@ -61,7 +61,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: sbom-submission-example-application-entry
-          path: app/SbomSubmissionExample.deps.json
+          path: src/SbomSubmissionExample/obj/Release/SbomSubmissionExample.deps.json
           if-no-files-found: error
 
       - name: Upload Trivy SBOM artifact

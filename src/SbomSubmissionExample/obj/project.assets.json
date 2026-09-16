@@ -2785,11 +2785,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/src/src/SbomSubmissionExample/SbomSubmissionExample.csproj",
+      "projectUniqueName": "/home/admirmuric/github/sbom-submission-example/src/SbomSubmissionExample/SbomSubmissionExample.csproj",
       "projectName": "SbomSubmissionExample",
-      "projectPath": "/src/src/SbomSubmissionExample/SbomSubmissionExample.csproj",
+      "projectPath": "/home/admirmuric/github/sbom-submission-example/src/SbomSubmissionExample/SbomSubmissionExample.csproj",
       "packagesPath": "/root/.nuget/packages/",
-      "outputPath": "/src/src/SbomSubmissionExample/obj/",
+      "outputPath": "/home/admirmuric/github/sbom-submission-example/src/SbomSubmissionExample/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/root/.nuget/NuGet/NuGet.Config"
@@ -2810,11 +2810,6 @@
         "warnAsError": [
           "NU1605"
         ]
-      },
-      "restoreAuditProperties": {
-        "enableAudit": "true",
-        "auditLevel": "low",
-        "auditMode": "direct"
       }
     },
     "frameworks": {
@@ -2858,7 +2853,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/8.0.424/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.131/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
