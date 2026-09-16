@@ -4,10 +4,10 @@ description: Verifies an attestation, downloads the SBOM, and submits it to the 
 inputs:
   subject:
     description: Attestation subject name.
-    required: true
+    required: false
   digest:
     description: Subject digest.
-    required: true
+    required: false
   file-path:
     description: Path to local artifact file. Required for file artifacts, not needed for containers.
     required: false
