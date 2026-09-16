@@ -58,10 +58,10 @@ jobs:
           push: true
           tags: ${{ steps.image.outputs.name }}:${{ steps.image.outputs.tag }}
 
-      - name: Generate SBOM from image
+      - name: Generate SBOM from .NET dependencies
         uses: anchore/sbom-action@v0
         with:
-          image: ${{ steps.image.outputs.name }}:${{ steps.image.outputs.tag }}
+          file: src/SbomSubmissionExample/bin/Release/net8.0/SbomSubmissionExample.deps.json
           format: spdx-json
           output-file: sbom.spdx.json
           artifact-name: sbom-submission-example.spdx.json
@@ -110,4 +110,5 @@ jobs:
           subject: ${{ steps.image.outputs.name }}
           digest: ${{ steps.push_image.outputs.digest }}
           correlator: src/SbomSubmissionExample/SbomSubmissionExample.csproj
+          sbom-path: sbom.spdx.json
           token: ${{ secrets.GITHUB_TOKEN }}
