@@ -75,5 +75,6 @@ runs:
       with:
         filePath: ${{ steps.sbom.outputs.sbom_dir }}
         filePattern: "*.json"
+        manifestPath: src/SbomSubmissionExample/SbomSubmissionExample.csproj
         correlator: ${{ inputs.correlator }}
         token: ${{ inputs.token }}
