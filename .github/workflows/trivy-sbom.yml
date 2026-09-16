@@ -1,0 +1,39 @@
+name: Generate Trivy SBOM
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - Dockerfile
+      - src/**
+      - .github/workflows/trivy-sbom.yml
+
+permissions:
+  contents: read
+
+jobs:
+  trivy-sbom:
+    name: Generate SBOM with Trivy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Build container image
+        run: docker build --tag sbom-submission-example:${{ github.sha }} .
+
+      - name: Generate Trivy SBOM
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: sbom-submission-example:${{ github.sha }}
+          format: spdx-json
+          output: trivy-sbom.spdx.json
+          scanners: vuln
+
+      - name: Upload Trivy SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-sbom
+          path: trivy-sbom.spdx.json

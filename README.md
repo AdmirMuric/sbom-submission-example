@@ -19,3 +19,5 @@ The workflow in `.github/workflows/dependency-submission.yml` mirrors the patter
 5. Verify the attestation, download the linked SBOM, verify its SHA-256 hash, and submit it to GitHub's dependency graph.
 
 Run it manually from **Actions > Dependency Submission > Run workflow**.
+
+The separate `.github/workflows/trivy-sbom.yml` workflow builds the container locally and generates `trivy-sbom.spdx.json` with Trivy. It uploads the file as a workflow artifact and does not publish or submit the SBOM. Run it manually from **Actions > Generate Trivy SBOM > Run workflow**.
