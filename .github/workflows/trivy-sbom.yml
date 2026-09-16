@@ -37,4 +37,5 @@ jobs:
         with:
           correlator: trivy-sbom
           sbom-path: trivy-sbom.spdx.json
+          manifestInput: trivy
           token: ${{ secrets.GITHUB_TOKEN }}

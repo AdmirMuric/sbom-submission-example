@@ -20,6 +20,9 @@ inputs:
   token:
     description: GitHub token with contents write permission.
     required: true
+  manifestInput:
+    description: Path to the manifest file for the dependency snapshot.
+    required: false
 
 runs:
   using: composite
@@ -86,6 +89,6 @@ runs:
       with:
         filePath: ${{ steps.sbom.outputs.sbom_dir }}
         filePattern: "*.json"
-        manifestPath: src/SbomSubmissionExample/SbomSubmissionExample.csproj
+        manifestPath: ${{ inputs.manifestInput }}
         correlator: ${{ inputs.correlator }}
         token: ${{ inputs.token }}

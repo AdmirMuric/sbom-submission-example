@@ -90,5 +90,6 @@ jobs:
         with:
           subject: ${{ steps.image.outputs.name }}
           digest: ${{ steps.push_image.outputs.digest }}
-          correlator: src/SbomSubmissionExample/SbomSubmissionExample.csproj
+          correlator: syft
+          manifestInput: syft
           token: ${{ secrets.GITHUB_TOKEN }}
