@@ -57,6 +57,13 @@ jobs:
           output: trivy-sbom.spdx.json
           scanners: vuln
 
+      - name: Upload Trivy SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-submission-example-trivy
+          path: trivy-sbom.spdx.json
+          if-no-files-found: error
+
       - name: Create SBOM release
         uses: softprops/action-gh-release@v3
         with:
