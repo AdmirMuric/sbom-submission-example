@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   trivy-sbom:
-    name: Generate SBOM with Trivy
+    name: Generate SBOM with Trivyy
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
