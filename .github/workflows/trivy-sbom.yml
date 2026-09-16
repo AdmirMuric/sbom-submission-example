@@ -57,6 +57,11 @@ jobs:
           output: trivy-sbom.spdx.json
           scanners: vuln
 
+      - name: Print application dependency entry
+        shell: bash
+        run: |
+          jq -r '.packages[] | select(.name == "app/SbomSubmissionExample.deps.json") | .name' trivy-sbom.spdx.json
+
       - name: Upload Trivy SBOM artifact
         uses: actions/upload-artifact@v4
         with:

@@ -66,6 +66,11 @@ jobs:
           output-file: sbom.spdx.json
           artifact-name: sbom-submission-example.spdx.json
 
+      - name: Print application dependency entry
+        shell: bash
+        run: |
+          jq -r '.packages[] | select(.name == "app/SbomSubmissionExample.deps.json") | .name' sbom.spdx.json
+
       - name: Create SBOM release
         uses: softprops/action-gh-release@v3
         with:
