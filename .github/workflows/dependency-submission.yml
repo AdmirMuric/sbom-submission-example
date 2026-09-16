@@ -66,6 +66,25 @@ jobs:
           output-file: sbom.spdx.json
           artifact-name: sbom-submission-example.spdx.json
 
+      - name: Normalize SPDX dependency relationships
+        shell: bash
+        run: |
+          tmp_file=$(mktemp)
+          jq '
+            .relationships |= map(
+              if .relationshipType == "DEPENDENCY_OF" then
+                .spdxElementId as $dependency
+                | .relatedSpdxElement as $dependent
+                | .spdxElementId = $dependent
+                | .relatedSpdxElement = $dependency
+                | .relationshipType = "DEPENDS_ON"
+              else
+                .
+              end
+            )
+          ' sbom.spdx.json > "$tmp_file"
+          mv "$tmp_file" sbom.spdx.json
+
       - name: Create SBOM release
         uses: softprops/action-gh-release@v3
         with:
