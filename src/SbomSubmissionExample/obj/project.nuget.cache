@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "BaPQSlnd/MD6xV42lh0t0NsMCeZRE4IF8/rULF+pdGS6iIIckJQHzLKLI9xNMGTME8OzNXz2ALwhBFVte6FKIA==",
+  "dgSpecHash": "68FueSBUBqaHGWffyTUtJxMW9dS1f/jPPpKjYJVizTiJ3wJX04hB6D7oeguTAKJQnjzXBn7Sx0TslYa1lGjpZA==",
   "success": true,
   "projectFilePath": "/home/admirmuric/github/sbom-submission-example/src/SbomSubmissionExample/SbomSubmissionExample.csproj",
   "expectedPackageFiles": [

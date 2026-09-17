@@ -21,6 +21,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore dependencies with lock file
+        run: dotnet restore SbomSubmissionExample.sln --use-lock-file
+
       - name: Generate and submit Trivy dependency snapshot
         uses: aquasecurity/trivy-action@v0.36.0
         with:
