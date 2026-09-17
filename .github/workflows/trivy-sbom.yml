@@ -12,89 +12,20 @@ on:
 
 permissions:
   contents: write
-  id-token: write
-  attestations: write
-  packages: write
 
 jobs:
   trivy-sbom:
-    name: Generate SBOM with Trivyy
+    name: Generate and submit dependency snapshot with Trivy
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Docker login
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ github.token }}
-
-      - name: Set image metadata
-        id: image
-        shell: bash
-        run: |
-          image="ghcr.io/${GITHUB_REPOSITORY,,}"
-          tag="trivy-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-          echo "name=$image" >> "$GITHUB_OUTPUT"
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
-
-      - name: Build and push container image
-        id: push_image
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: Dockerfile
-          push: true
-          tags: ${{ steps.image.outputs.name }}:${{ steps.image.outputs.tag }}
-
-      - name: Generate Trivy SBOM
+      - name: Generate and submit Trivy dependency snapshot
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: ${{ steps.image.outputs.name }}:${{ steps.image.outputs.tag }}
-          format: spdx-json
-          output: trivy-sbom.spdx.json
-          scanners: vuln
-
-      - name: Upload depsjson
-        uses: actions/upload-artifact@v4
-        with:
-          name: sbom-submission-example-application-entry
-          path: src/SbomSubmissionExample/bin/Release/net8.0/SbomSubmissionExample.deps.json
-          if-no-files-found: error
-
-      - name: Upload Trivy SBOM artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: sbom-submission-example-trivy
-          path: trivy-sbom.spdx.json
-          if-no-files-found: error
-
-      - name: Create SBOM release
-        uses: softprops/action-gh-release@v3
-        with:
-          tag_name: trivy-sbom-${{ github.run_id }}-${{ github.run_attempt }}
-          name: trivy-sbom-${{ github.run_id }}-${{ github.run_attempt }}
-          prerelease: true
-          files: |
-            trivy-sbom.spdx.json
-            README.md
-
-      - name: Create SBOM attestation
-        uses: ./.github/actions/github-create-sbom-attestation
-        with:
-          subject-name: ${{ steps.image.outputs.name }}
-          subject-digest: ${{ steps.push_image.outputs.digest }}
-          sbom-path: trivy-sbom.spdx.json
-          release-tag: trivy-sbom-${{ github.run_id }}-${{ github.run_attempt }}
-          release-title: trivy-sbom-${{ github.run_id }}-${{ github.run_attempt }}
-
-      - name: Submit Trivy SBOM to Dependency Graph
-        uses: ./.github/actions/sbom-dependency-submission
-        with:
-          subject: ${{ steps.image.outputs.name }}
-          digest: ${{ steps.push_image.outputs.digest }}
-          correlator: trivy-sbom
-          manifestInput: trivy
-          token: ${{ secrets.GITHUB_TOKEN }}
+          scan-type: fs
+          format: github
+          output: dependency-results.sbom.json
+          scan-ref: .
+          github-pat: ${{ secrets.GITHUB_TOKEN }}
