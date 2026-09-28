@@ -16,8 +16,6 @@ The workflow in `.github/workflows/dependency-submission.yml` mirrors the patter
 2. Generate an SPDX JSON SBOM from the pushed image with `anchore/sbom-action`.
 3. Publish `sbom.spdx.json` as a run-specific GitHub release asset.
 4. Create a custom attestation that links the container image digest to the SBOM release asset.
-5. Verify the attestation, download the linked SBOM, verify its SHA-256 hash, and submit it to GitHub's dependency graph.
+5. Normalize the generated SPDX dependency relationships, then verify the attestation, download the linked SBOM, verify its SHA-256 hash, and submit it to GitHub's dependency graph.
 
 Run it manually from **Actions > Dependency Submission > Run workflow**.
-
-The separate `.github/workflows/trivy-sbom.yml` workflow builds the container locally and generates `trivy-sbom.spdx.json` with Trivy. It uploads the file as a workflow artifact and does not publish or submit the SBOM. Run it manually from **Actions > Generate Trivy SBOM > Run workflow**. 
