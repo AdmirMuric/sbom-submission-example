@@ -6,7 +6,6 @@ on:
     branches:
       - main
     paths:
-      - Dockerfile
       - src/**
       - .github/actions/**
       - .github/workflows/dependency-submission.yml
@@ -19,18 +18,31 @@ permissions:
 
 jobs:
   container-sbom:
-    name: Generate and submit container SBOM
+    name: Generate and submit container SBOM (${{ matrix.service.name }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - name: dotnet-app
+            dockerfile: src/SbomSubmissionExample/Dockerfile
+            manifest: src/SbomSubmissionExample/SbomSubmissionExample.csproj
+            dotnet: true
+          - name: python-hello
+            dockerfile: src/python-hello/Dockerfile
+            manifest: src/python-hello/requirements.txt
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
 
       - name: Set up .NET
+        if: matrix.service.dotnet
         uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 8.0.x
 
       - name: Build app
+        if: matrix.service.dotnet
         run: dotnet build SbomSubmissionExample.sln --configuration Release
 
       - name: Docker login
@@ -43,8 +55,10 @@ jobs:
       - name: Set image metadata
         id: image
         shell: bash
+        env:
+          SERVICE: ${{ matrix.service.name }}
         run: |
-          image="ghcr.io/${GITHUB_REPOSITORY,,}"
+          image="ghcr.io/${GITHUB_REPOSITORY,,}/${SERVICE}"
           tag="run-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           echo "name=$image" >> "$GITHUB_OUTPUT"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
@@ -54,7 +68,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: Dockerfile
+          file: ${{ matrix.service.dockerfile }}
           push: true
           tags: ${{ steps.image.outputs.name }}:${{ steps.image.outputs.tag }}
 
@@ -64,9 +78,10 @@ jobs:
           image: ${{ steps.image.outputs.name }}:${{ steps.image.outputs.tag }}
           format: spdx-json
           output-file: sbom.spdx.json
-          artifact-name: sbom-submission-example.spdx.json
+          artifact-name: ${{ matrix.service.name }}.spdx.json
 
       - name: Upload depsjson
+        if: matrix.service.dotnet
         uses: actions/upload-artifact@v4
         with:
           name: sbom-submission-example-application-entry
@@ -110,8 +125,8 @@ jobs:
       - name: Create SBOM release
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: sbom-${{ github.run_id }}-${{ github.run_attempt }}
-          name: sbom-${{ github.run_id }}-${{ github.run_attempt }}
+          tag_name: sbom-${{ matrix.service.name }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: sbom-${{ matrix.service.name }}-${{ github.run_id }}-${{ github.run_attempt }}
           prerelease: true
           files: |
             sbom.spdx.json
@@ -123,14 +138,14 @@ jobs:
           subject-name: ${{ steps.image.outputs.name }}
           subject-digest: ${{ steps.push_image.outputs.digest }}
           sbom-path: sbom.spdx.json
-          release-tag: sbom-${{ github.run_id }}-${{ github.run_attempt }}
-          release-title: sbom-${{ github.run_id }}-${{ github.run_attempt }}
+          release-tag: sbom-${{ matrix.service.name }}-${{ github.run_id }}-${{ github.run_attempt }}
+          release-title: sbom-${{ matrix.service.name }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Submit SBOM to Dependency Graph
         uses: ./.github/actions/sbom-dependency-submission
         with:
           subject: ${{ steps.image.outputs.name }}
           digest: ${{ steps.push_image.outputs.digest }}
-          correlator: syft
-          manifestInput: src/SbomSubmissionExample/SbomSubmissionExample.csproj
+          correlator: syft-${{ matrix.service.name }}
+          manifestInput: ${{ matrix.service.manifest }}
           token: ${{ secrets.GITHUB_TOKEN }}
