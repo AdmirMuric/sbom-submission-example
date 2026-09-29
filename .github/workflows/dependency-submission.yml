@@ -77,7 +77,7 @@ jobs:
         shell: bash
         run: |
           tmp_file=$(mktemp)
-          jq --slurpfile direct <(dotnet msbuild src/SbomSubmissionExample/SbomSubmissionExample.csproj -getItem:PackageReference | jq '[.Items.PackageReference[].Identity]') '
+          jq '
             .relationships |= map(
               if .relationshipType == "DEPENDENCY_OF" then
                 .spdxElementId as $dependency
@@ -89,11 +89,20 @@ jobs:
                 .
               end
             )
-            | .relationships += [
+            | [.relationships[] | select(.relationshipType == "DEPENDS_ON")] as $edges
+            | ($edges | map(.relatedSpdxElement)) as $has_parent
+            # NuGet: Syft emits the app itself as a parentless package; its children are the direct references.
+            # Other ecosystems (deb, apk, rpm, pypi, ...) have no app package, so parentless packages are already direct.
+            | [
                 .packages[]
-                | select(.name as $name | $direct[0] | index($name))
-                | select(any(.externalRefs[]?; .referenceCategory == "PACKAGE-MANAGER" and .referenceType == "purl" and (.referenceLocator | startswith("pkg:nuget/"))))
-                | {spdxElementId: "SPDXRef-RootPackage", relationshipType: "DEPENDS_ON", relatedSpdxElement: .SPDXID}
+                | select(any(.externalRefs[]?; .referenceType == "purl" and (.referenceLocator | startswith("pkg:nuget/"))))
+                | .SPDXID
+                | select(. as $id | ($has_parent | index($id) | not) and any($edges[]; .spdxElementId == $id))
+              ] as $nuget_apps
+            | .relationships += [
+                $edges[]
+                | select(.spdxElementId | IN($nuget_apps[]))
+                | {spdxElementId: "SPDXRef-RootPackage", relationshipType: "DEPENDS_ON", relatedSpdxElement: .relatedSpdxElement}
               ]
           ' sbom.spdx.json > "$tmp_file"
           mv "$tmp_file" sbom.spdx.json
