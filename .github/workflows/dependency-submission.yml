@@ -73,11 +73,11 @@ jobs:
           path: src/SbomSubmissionExample/bin/Release/net8.0/SbomSubmissionExample.deps.json
           if-no-files-found: error
 
-      - name: Normalize SPDX dependency relationships
+      - name: Normalize SPDX dependency relationships and direct references
         shell: bash
         run: |
           tmp_file=$(mktemp)
-          jq '
+          jq --slurpfile direct <(dotnet msbuild src/SbomSubmissionExample/SbomSubmissionExample.csproj -getItem:PackageReference | jq '[.Items.PackageReference[].Identity]') '
             .relationships |= map(
               if .relationshipType == "DEPENDENCY_OF" then
                 .spdxElementId as $dependency
@@ -89,6 +89,12 @@ jobs:
                 .
               end
             )
+            | .relationships += [
+                .packages[]
+                | select(.name as $name | $direct[0] | index($name))
+                | select(any(.externalRefs[]?; .referenceCategory == "PACKAGE-MANAGER" and .referenceType == "purl" and (.referenceLocator | startswith("pkg:nuget/"))))
+                | {spdxElementId: "SPDXRef-RootPackage", relationshipType: "DEPENDS_ON", relatedSpdxElement: .SPDXID}
+              ]
           ' sbom.spdx.json > "$tmp_file"
           mv "$tmp_file" sbom.spdx.json
 
