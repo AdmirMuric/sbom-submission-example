@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using Serilog;
+using AutoMapper;
 
 using IHost host = Host.CreateDefaultBuilder(args)
     .UseSerilog((_, configuration) => configuration.WriteTo.Console())
